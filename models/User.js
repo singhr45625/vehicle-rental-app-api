@@ -38,7 +38,8 @@ const UserSchema = new mongoose.Schema({
   documents: {
     adhaarCard: { type: String }, // Path to file
     panCard: { type: String },    // Path to file
-    universityId: { type: String } // Path to file
+    universityId: { type: String }, // Path to file
+    shopPaper: { type: String } // Path to file
   }
 });
 
