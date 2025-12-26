@@ -17,8 +17,6 @@ const createVehicle = async (req, res) => {
             type,
             brand,
             model,
-            model,
-            year,
             year,
             fuelType,
             transmission,

@@ -4,7 +4,7 @@ const { StatusCodes } = require('http-status-codes');
 
 const createBooking = async (req, res) => {
     try {
-        const { vehicleId, startDate, endDate, numberOfPeople, destination } = req.body;
+        const { vehicleId, startDate, endDate } = req.body;
         const customer = req.user.userId;
 
         const vehicle = await Vehicle.findById(vehicleId);
@@ -34,9 +34,7 @@ const createBooking = async (req, res) => {
             vendor: vehicle.vendor,
             startDate,
             endDate,
-            totalCost,
-            numberOfPeople,
-            destination
+            totalCost
         });
 
         res.status(StatusCodes.CREATED).json({ booking });
