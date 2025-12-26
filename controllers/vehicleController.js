@@ -109,7 +109,7 @@ const deleteVehicle = async (req, res) => {
             return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Not authorized to delete this vehicle' });
         }
 
-        await vehicle.remove();
+        await vehicle.deleteOne();
         res.status(StatusCodes.OK).json({ message: 'Vehicle removed' });
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message });

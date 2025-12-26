@@ -102,7 +102,7 @@ exports.getOrderById = async (req, res) => {
     }
 
     // Authorization check
-    if (req.user._id.toString() !== order.user._id.toString() && !req.user.isAdmin) {
+    if (req.user._id.toString() !== order.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to access this order'
