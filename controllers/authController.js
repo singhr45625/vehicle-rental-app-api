@@ -230,6 +230,52 @@ const updateUser = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('-password');
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({ error: 'User not found' });
+    }
+    res.status(StatusCodes.OK).json({ user });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to fetch profile' });
+  }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const { name, phone, address } = req.body;
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({ error: 'User not found' });
+    }
+
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (address) user.address = address;
+
+    await user.save();
+
+    res.status(StatusCodes.OK).json({
+      message: 'Profile updated successfully',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        address: user.address,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to update profile' });
+  }
+};
+
 // Helper function to create JWT
 const createToken = (user) => {
   return jwt.sign(
@@ -246,4 +292,4 @@ const createToken = (user) => {
   );
 };
 
-module.exports = { register, login, deleteUser, searchUser, updateUser };
+module.exports = { register, login, deleteUser, searchUser, updateUser, getProfile, updateProfile };

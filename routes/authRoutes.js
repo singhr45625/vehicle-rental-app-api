@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, deleteUser, searchUser, updateUser } = require('../controllers/authController');
+const { register, login, deleteUser, searchUser, updateUser, getProfile, updateProfile } = require('../controllers/authController');
+const { protect } = require('../middleware/auth');
 const upload = require('../utils/multerConfig');
 
 router.post('/register', upload.fields([
@@ -13,5 +14,7 @@ router.post('/login', login);
 router.delete('/delete/:userId', deleteUser);
 router.get('/search', searchUser);
 router.put('/update/:userId', updateUser);
+router.get('/profile', protect, getProfile);
+router.put('/profile', protect, updateProfile);
 
 module.exports = router;
