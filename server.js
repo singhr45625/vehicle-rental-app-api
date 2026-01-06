@@ -24,7 +24,9 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/cart", require("./routes/cartRoutes"));
 app.use("/api/vehicles", require("./routes/vehicleRoutes"));
+app.use("/api/vehicles", require("./routes/vehicleRoutes"));
 app.use("/api/bookings", require("./routes/bookingRoutes"));
+app.use("/api/admin", require("./routes/adminRoutes"));
 
 // Serve static files
 app.use('/uploads', express.static('uploads'));

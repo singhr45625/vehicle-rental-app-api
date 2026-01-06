@@ -28,6 +28,11 @@ const UserSchema = new mongoose.Schema({
     enum: ['user', 'admin', 'customer', 'vendor'],
     default: 'customer'
   },
+  verificationStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
   phone: {
     type: String,
     // required: [true, 'Please provide phone number'] // Optional for now
