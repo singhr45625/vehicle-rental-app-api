@@ -1,6 +1,16 @@
 const User = require('../models/User');
 const { StatusCodes } = require('http-status-codes');
 
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find({}).select('-password');
+        res.status(StatusCodes.OK).json({ users });
+    } catch (error) {
+        console.error("Error fetching all users:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to fetch users' });
+    }
+};
+
 const getPendingUsers = async (req, res) => {
     try {
         const users = await User.find({
@@ -112,6 +122,7 @@ const rejectUser = async (req, res) => {
 };
 
 module.exports = {
+    getAllUsers,
     getPendingUsers,
     approveUser,
     rejectUser,
