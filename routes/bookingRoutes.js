@@ -5,13 +5,13 @@ const {
     getAllBookings,
     updateBookingStatus
 } = require('../controllers/bookingController');
-const { authenticateUser, authorizePermissions } = require('../middleware/auth');
+const { authenticateUser, authorizePermissions, checkVerification } = require('../middleware/auth');
 
 router.use(authenticateUser);
 
 router
     .route('/')
-    .post(authorizePermissions('customer'), createBooking)
+    .post(authorizePermissions('customer'), checkVerification, createBooking)
     .get(getAllBookings);
 
 router
