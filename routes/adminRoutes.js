@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getPendingUsers, approveUser, rejectUser } = require('../controllers/adminController');
+const { getPendingUsers, approveUser, rejectUser, createUser, updateUser } = require('../controllers/adminController');
 const adminCheck = require('../middleware/admin');
 const { authenticateUser } = require('../middleware/auth');
 
@@ -10,5 +10,7 @@ router.use(authenticateUser, adminCheck);
 router.get('/pending', getPendingUsers);
 router.put('/approve/:userId', approveUser);
 router.put('/reject/:userId', rejectUser);
+router.post('/create', createUser);
+router.put('/update/:userId', updateUser);
 
 module.exports = router;
