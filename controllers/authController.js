@@ -261,24 +261,28 @@ const updateProfile = async (req, res) => {
     // Handle file uploads
     let hasNewDocuments = false;
     if (req.files) {
-      if (!user.documents) user.documents = {};
+      // Create a shallow copy or new object to ensure Mongoose detects change
+      const updatedDocuments = { ...user.documents };
 
       if (req.files.adhaarCard) {
-        user.documents.adhaarCard = req.files.adhaarCard[0].path;
+        updatedDocuments.adhaarCard = req.files.adhaarCard[0].path;
         hasNewDocuments = true;
       }
       if (req.files.panCard) {
-        user.documents.panCard = req.files.panCard[0].path;
+        updatedDocuments.panCard = req.files.panCard[0].path;
         hasNewDocuments = true;
       }
       if (req.files.universityId) {
-        user.documents.universityId = req.files.universityId[0].path;
+        updatedDocuments.universityId = req.files.universityId[0].path;
         hasNewDocuments = true;
       }
       if (req.files.shopPaper) {
-        user.documents.shopPaper = req.files.shopPaper[0].path;
+        updatedDocuments.shopPaper = req.files.shopPaper[0].path;
         hasNewDocuments = true;
       }
+
+      user.documents = updatedDocuments;
+      user.markModified('documents'); // Explicitly mark as modified
     }
 
     // If new documents are uploaded, reset status to pending for admin approval
