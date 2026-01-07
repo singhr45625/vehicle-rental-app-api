@@ -258,17 +258,47 @@ const updateProfile = async (req, res) => {
     if (phone) user.phone = phone;
     if (address) user.address = address;
 
+    // Handle file uploads
+    let hasNewDocuments = false;
+    if (req.files) {
+      if (!user.documents) user.documents = {};
+
+      if (req.files.adhaarCard) {
+        user.documents.adhaarCard = req.files.adhaarCard[0].path;
+        hasNewDocuments = true;
+      }
+      if (req.files.panCard) {
+        user.documents.panCard = req.files.panCard[0].path;
+        hasNewDocuments = true;
+      }
+      if (req.files.universityId) {
+        user.documents.universityId = req.files.universityId[0].path;
+        hasNewDocuments = true;
+      }
+      if (req.files.shopPaper) {
+        user.documents.shopPaper = req.files.shopPaper[0].path;
+        hasNewDocuments = true;
+      }
+    }
+
+    // If new documents are uploaded, reset status to pending for admin approval
+    if (hasNewDocuments) {
+      user.verificationStatus = 'pending';
+    }
+
     await user.save();
 
     res.status(StatusCodes.OK).json({
-      message: 'Profile updated successfully',
+      message: hasNewDocuments ? 'Profile updated. Verification pending approval.' : 'Profile updated successfully',
       user: {
         _id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
         address: user.address,
-        role: user.role
+        role: user.role,
+        verificationStatus: user.verificationStatus,
+        documents: user.documents
       }
     });
   } catch (error) {
