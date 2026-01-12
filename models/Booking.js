@@ -35,6 +35,11 @@ const BookingSchema = new mongoose.Schema({
     },
     notes: {
         type: String
+    },
+    currentLocation: {
+        latitude: Number,
+        longitude: Number,
+        lastUpdated: Date
     }
 }, { timestamps: true });
 

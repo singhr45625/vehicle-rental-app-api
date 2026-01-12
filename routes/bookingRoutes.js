@@ -3,7 +3,8 @@ const router = express.Router();
 const {
     createBooking,
     getAllBookings,
-    updateBookingStatus
+    updateBookingStatus,
+    updateLocation
 } = require('../controllers/bookingController');
 const { authenticateUser, authorizePermissions, checkVerification } = require('../middleware/auth');
 
@@ -17,5 +18,7 @@ router
 router
     .route('/:id')
     .patch(updateBookingStatus);
+
+router.route('/:id/location').patch(updateLocation);
 
 module.exports = router;

@@ -126,5 +126,38 @@ const updateBookingStatus = async (req, res) => {
 module.exports = {
     createBooking,
     getAllBookings,
-    updateBookingStatus
+    updateBookingStatus,
+    updateLocation
+};
+
+const updateLocation = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { latitude, longitude } = req.body;
+
+        if (!latitude || !longitude) {
+            return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Please provide latitude and longitude' });
+        }
+
+        const booking = await Booking.findByIdAndUpdate(
+            id,
+            {
+                currentLocation: {
+                    latitude,
+                    longitude,
+                    lastUpdated: Date.now()
+                }
+            },
+            { new: true }
+        );
+
+        if (!booking) {
+            return res.status(StatusCodes.NOT_FOUND).json({ error: 'Booking not found' });
+        }
+
+        res.status(StatusCodes.OK).json({ success: true, location: booking.currentLocation });
+    } catch (error) {
+        console.error("Location Update Error:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to update location' });
+    }
 };
