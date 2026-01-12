@@ -4,11 +4,39 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require('./config/db');
 
+const http = require('http');
+const { Server } = require("socket.io");
+
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allow all origins for mobile app
+    methods: ["GET", "POST"]
+  }
+});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Share io instance with controllers
+app.set('io', io);
+
+// Socket.io Connection Logic
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+
+  // Join a specific chat room
+  socket.on('join_chat', (chatId) => {
+    socket.join(chatId);
+    console.log(`User ${socket.id} joined chat: ${chatId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
 
 // Database connection
 connectDB()
@@ -23,7 +51,6 @@ app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/cart", require("./routes/cartRoutes"));
-app.use("/api/vehicles", require("./routes/vehicleRoutes"));
 app.use("/api/vehicles", require("./routes/vehicleRoutes"));
 app.use("/api/bookings", require("./routes/bookingRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
@@ -43,4 +70,5 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Change from app.listen to server.listen
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

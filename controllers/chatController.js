@@ -89,6 +89,12 @@ const sendMessage = async (req, res) => {
 
         const fullMessage = await message.populate('sender', 'name avatar');
 
+        // Emit socket event
+        const io = req.app.get('io');
+        if (io) {
+            io.to(chatId).emit('new_message', fullMessage);
+        }
+
         res.status(StatusCodes.CREATED).json({ message: fullMessage });
     } catch (error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message });
