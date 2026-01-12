@@ -89,7 +89,7 @@ const updateBookingStatus = async (req, res) => {
             }
         } else {
             // Vendor or Admin
-            if (req.user.role === 'vendor' && booking.vendor.toString() !== userId) {
+            if (req.user.role === 'vendor' && booking.vendor.toString() !== userId.toString()) {
                 return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Not authorized to update this booking' });
             }
         }
