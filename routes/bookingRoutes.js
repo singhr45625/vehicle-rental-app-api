@@ -4,6 +4,7 @@ const {
     createBooking,
     getAllBookings,
     updateBookingStatus,
+    getSingleBooking,
     updateLocation
 } = require('../controllers/bookingController');
 const { authenticateUser, authorizePermissions, checkVerification } = require('../middleware/auth');
@@ -17,6 +18,7 @@ router
 
 router
     .route('/:id')
+    .get(getSingleBooking)
     .patch(updateBookingStatus);
 
 router.route('/:id/location').patch(updateLocation);

@@ -125,6 +125,24 @@ const updateBookingStatus = async (req, res) => {
 
 
 
+const getSingleBooking = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const booking = await Booking.findById(id)
+            .populate('vehicle')
+            .populate('customer', 'name email phone')
+            .populate('vendor', 'name email phone');
+
+        if (!booking) {
+            return res.status(StatusCodes.NOT_FOUND).json({ error: 'Booking not found' });
+        }
+
+        res.status(StatusCodes.OK).json({ booking });
+    } catch (error) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message });
+    }
+};
+
 const updateLocation = async (req, res) => {
     try {
         const { id } = req.params;
@@ -161,5 +179,6 @@ module.exports = {
     createBooking,
     getAllBookings,
     updateBookingStatus,
+    getSingleBooking,
     updateLocation
 };
