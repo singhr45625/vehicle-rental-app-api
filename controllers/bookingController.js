@@ -123,12 +123,7 @@ const updateBookingStatus = async (req, res) => {
     }
 };
 
-module.exports = {
-    createBooking,
-    getAllBookings,
-    updateBookingStatus,
-    updateLocation
-};
+
 
 const updateLocation = async (req, res) => {
     try {
@@ -160,4 +155,11 @@ const updateLocation = async (req, res) => {
         console.error("Location Update Error:", error);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to update location' });
     }
+};
+
+module.exports = {
+    createBooking,
+    getAllBookings,
+    updateBookingStatus,
+    updateLocation
 };
