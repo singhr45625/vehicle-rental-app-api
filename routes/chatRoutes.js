@@ -5,7 +5,8 @@ const {
     getOrCreateChat,
     getMyChats,
     getMessages,
-    sendMessage
+    sendMessage,
+    setNegotiatedPrice
 } = require('../controllers/chatController');
 
 router.use(authenticateUser);
@@ -14,5 +15,6 @@ router.post('/', getOrCreateChat);
 router.get('/', getMyChats);
 router.get('/:chatId/messages', getMessages);
 router.post('/:chatId/messages', sendMessage);
+router.post('/:chatId/negotiate', setNegotiatedPrice);
 
 module.exports = router;

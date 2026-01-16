@@ -22,6 +22,11 @@ const ChatSchema = new mongoose.Schema({
             ref: 'User'
         },
         timestamp: Date
+    },
+    negotiation: {
+        price: Number,
+        status: { type: String, enum: ['active', 'completed', 'none'], default: 'none' },
+        lastUpdated: Date
     }
 }, { timestamps: true });
 

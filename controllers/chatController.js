@@ -101,9 +101,58 @@ const sendMessage = async (req, res) => {
     }
 };
 
+const setNegotiatedPrice = async (req, res) => {
+    try {
+        const { chatId } = req.params;
+        const { price } = req.body;
+        const vendorId = req.user.userId;
+
+        // Verify that the user is indeed the vendor of this chat
+        const chat = await Chat.findOne({ _id: chatId, vendor: vendorId });
+        if (!chat) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({ error: "Not authorized to negotiate for this chat" });
+        }
+
+        chat.negotiation = {
+            price: Number(price),
+            status: 'active',
+            lastUpdated: new Date()
+        };
+        await chat.save();
+
+        // Emit socket event
+        const io = req.app.get('io');
+        if (io) {
+            io.to(chatId).emit('negotiation_update', chat.negotiation);
+        }
+
+        // Also send a system message
+        const message = await Message.create({
+            chat: chatId,
+            sender: vendorId,
+            content: `OFFER: I have offered a special price of ₹${price}/day for this vehicle.`,
+            isSystem: true // You might want to handle this flag in Message schema or just treat as normal text
+        });
+
+        // Update last message in chat
+        await Chat.findByIdAndUpdate(chatId, {
+            lastMessage: {
+                content: message.content,
+                sender: vendorId,
+                timestamp: new Date()
+            }
+        });
+
+        res.status(StatusCodes.OK).json({ chat, message });
+    } catch (error) {
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message });
+    }
+};
+
 module.exports = {
     getOrCreateChat,
     getMyChats,
     getMessages,
-    sendMessage
+    sendMessage,
+    setNegotiatedPrice
 };

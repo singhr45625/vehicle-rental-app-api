@@ -26,7 +26,30 @@ const createBooking = async (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).json({ error: 'End date must be after start date' });
         }
 
-        const totalCost = diffDays * vehicle.rentPerDay;
+        // NEGOTIATION LOGIC
+        // Check for active negotiation
+        let rentPerDay = vehicle.rentPerDay;
+
+        // Find chat between this customer, vehicle and vendor
+        const Chat = require('../models/Chat'); // Lazy load or move to top
+        const chat = await Chat.findOne({
+            customer: customer,
+            vendor: vehicle.vendor,
+            vehicle: vehicleId,
+            'negotiation.status': 'active'
+        });
+
+        if (chat && chat.negotiation && chat.negotiation.price) {
+            rentPerDay = chat.negotiation.price;
+            console.log(`Using negotiated price: ${rentPerDay}`);
+
+            // Mark negotiation as completed
+            chat.negotiation.status = 'completed';
+            chat.negotiation.price = null; // Optional: clear it or keep history
+            await chat.save();
+        }
+
+        const totalCost = diffDays * rentPerDay;
 
         const booking = await Booking.create({
             customer,
