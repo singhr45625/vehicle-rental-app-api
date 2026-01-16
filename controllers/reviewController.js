@@ -13,7 +13,7 @@ const createReview = async (req, res) => {
         }
 
         // Check compatibility
-        if (booking.customer.toString() !== reviewer) {
+        if (booking.customer.toString() !== reviewer.toString()) {
             return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Not authorized to review this booking' });
         }
 
