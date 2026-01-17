@@ -1,8 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { StatusCodes } = require('http-status-codes');
-const { OAuth2Client } = require('google-auth-library');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const { StatusCodes } = require('http-status-codes');
 
 const register = async (req, res) => {
   const { name, email, password, role, phone, address } = req.body;
@@ -313,48 +312,7 @@ const updateProfile = async (req, res) => {
   }
 };
 
-const googleLogin = async (req, res) => {
-  const { idToken } = req.body;
 
-  try {
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const { name, email, picture } = ticket.getPayload();
-
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      user = await User.create({
-        name,
-        email,
-        password: '', // Optional
-        role: 'customer',
-        verificationStatus: 'approved',
-      });
-    }
-
-    const token = createToken(user);
-
-    res.status(StatusCodes.OK).json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        verificationStatus: user.verificationStatus
-      },
-      token
-    });
-  } catch (error) {
-    console.error("Google login error:", error);
-    res.status(StatusCodes.UNAUTHORIZED).json({
-      error: 'Google login failed',
-      details: error.message
-    });
-  }
-};
 
 // Helper function to create JWT
 const createToken = (user) => {
@@ -372,4 +330,4 @@ const createToken = (user) => {
   );
 };
 
-module.exports = { register, login, deleteUser, searchUser, updateUser, getProfile, updateProfile, googleLogin };
+module.exports = { register, login, deleteUser, searchUser, updateUser, getProfile, updateProfile };
