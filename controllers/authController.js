@@ -1,7 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { StatusCodes } = require('http-status-codes');
-const { StatusCodes } = require('http-status-codes');
 
 const register = async (req, res) => {
   const { name, email, password, role, phone, address } = req.body;

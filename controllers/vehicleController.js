@@ -83,9 +83,23 @@ const updateVehicle = async (req, res) => {
             return res.status(StatusCodes.NOT_FOUND).json({ error: 'Vehicle not found' });
         }
 
+        console.log(`[DEBUG] Updating Vehicle: ${id}`);
+        console.log(`[DEBUG] Vehicle Vendor: ${vehicle.vendor}`);
+        console.log(`[DEBUG] Request User ID (req.user.userId): ${userId}`);
+        console.log(`[DEBUG] Request User _id (req.user._id): ${req.user._id}`);
+        console.log(`[DEBUG] Request User Role: ${req.user.role}`);
+
+        const currentUserId = userId || req.user._id;
+
         // Check if the user is the vendor of the vehicle or an admin
-        if (vehicle.vendor.toString() !== userId && req.user.role !== 'admin') {
+        if (vehicle.vendor.toString() !== currentUserId.toString() && req.user.role !== 'admin') {
+            console.log(`[DEBUG] Auth Failed: ${vehicle.vendor.toString()} !== ${currentUserId.toString()}`);
             return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Not authorized to update this vehicle' });
+        }
+
+        // If new images are uploaded, add them to the body
+        if (req.files && req.files.length > 0) {
+            req.body.images = req.files.map(file => file.path);
         }
 
         const updatedVehicle = await Vehicle.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
@@ -105,10 +119,11 @@ const deleteVehicle = async (req, res) => {
             return res.status(StatusCodes.NOT_FOUND).json({ error: 'Vehicle not found' });
         }
 
-        if (vehicle.vendor.toString() !== userId && req.user.role !== 'admin') {
+        const currentUserId = userId || req.user._id;
+
+        if (vehicle.vendor.toString() !== currentUserId.toString() && req.user.role !== 'admin') {
             return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Not authorized to delete this vehicle' });
         }
-
         await vehicle.deleteOne();
         res.status(StatusCodes.OK).json({ message: 'Vehicle removed' });
     } catch (error) {

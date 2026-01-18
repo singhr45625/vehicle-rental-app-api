@@ -18,7 +18,7 @@ router
 router
     .route('/:id')
     .get(getVehicleById)
-    .patch(authenticateUser, checkVerification, updateVehicle)
+    .patch(authenticateUser, checkVerification, upload.array('images', 5), updateVehicle)
     .delete(authenticateUser, checkVerification, deleteVehicle);
 
 module.exports = router;
