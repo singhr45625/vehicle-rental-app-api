@@ -9,6 +9,8 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret',
 });
 
+console.log(`[RAZORPAY] Initialized with Key ID: ${process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.substring(0, 8) + '...' : 'MISSING'}`);
+
 
 const createBooking = async (req, res) => {
     try {
@@ -231,16 +233,23 @@ const createRazorpayOrder = async (req, res) => {
         }
 
         if (booking.customer.toString() !== req.user.userId.toString()) {
+            console.error(`[RAZORPAY] Unauthorized order creation for booking ${id} by user ${req.user.userId}`);
             return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Not authorized' });
         }
 
+        const amount = Math.round(booking.totalCost * 100);
+        console.log(`[RAZORPAY] Creating order for booking ${booking._id}, amount: ${amount}, cost: ${booking.totalCost}`);
+
         const options = {
-            amount: booking.totalCost * 100, // amount in the smallest currency unit (paise)
+            amount: amount, // amount in the smallest currency unit (paise)
             currency: "INR",
             receipt: `receipt_order_${booking._id}`,
         };
 
+        console.log(`[RAZORPAY] Order Options:`, options);
+
         const order = await razorpay.orders.create(options);
+        console.log(`[RAZORPAY] Order created successfully: ${order.id}`);
 
         booking.razorpayOrderId = order.id;
         await booking.save();
@@ -252,8 +261,11 @@ const createRazorpayOrder = async (req, res) => {
             key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder'
         });
     } catch (error) {
-        console.error("Razorpay Order Creation Error:", error);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message || 'Razorpay order creation failed' });
+        console.error("Razorpay Order Creation Error Full:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: error.message || 'Razorpay order creation failed',
+            details: error.description || error.metadata || null
+        });
     }
 };
 
