@@ -28,6 +28,12 @@ const BookingSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    adminCommission: {
+        type: Number
+    },
+    vendorEarnings: {
+        type: Number
+    },
     status: {
         type: String,
         enum: ['pending', 'approved', 'rejected', 'completed', 'cancelled'],

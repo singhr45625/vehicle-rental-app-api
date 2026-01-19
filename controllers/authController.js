@@ -246,7 +246,7 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { name, phone, address } = req.body;
+    const { name, phone, address, upiId, accountNumber, ifscCode, bankName, accountHolderName } = req.body;
     const userId = req.user.userId;
 
     const user = await User.findById(userId);
@@ -257,6 +257,16 @@ const updateProfile = async (req, res) => {
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (address) user.address = address;
+
+    // Update payment details
+    if (upiId || accountNumber || ifscCode || bankName || accountHolderName) {
+      if (!user.paymentDetails) user.paymentDetails = {};
+      if (upiId !== undefined) user.paymentDetails.upiId = upiId;
+      if (accountNumber !== undefined) user.paymentDetails.accountNumber = accountNumber;
+      if (ifscCode !== undefined) user.paymentDetails.ifscCode = ifscCode;
+      if (bankName !== undefined) user.paymentDetails.bankName = bankName;
+      if (accountHolderName !== undefined) user.paymentDetails.accountHolderName = accountHolderName;
+    }
 
     // Handle file uploads
     let hasNewDocuments = false;
@@ -302,7 +312,9 @@ const updateProfile = async (req, res) => {
         address: user.address,
         role: user.role,
         verificationStatus: user.verificationStatus,
-        documents: user.documents
+        verificationStatus: user.verificationStatus,
+        documents: user.documents,
+        paymentDetails: user.paymentDetails
       }
     });
   } catch (error) {

@@ -44,6 +44,13 @@ const UserSchema = new mongoose.Schema({
     panCard: { type: String },    // Path to file
     universityId: { type: String }, // Path to file
     shopPaper: { type: String } // Path to file
+  },
+  paymentDetails: {
+    upiId: { type: String },
+    accountNumber: { type: String },
+    ifscCode: { type: String },
+    bankName: { type: String },
+    accountHolderName: { type: String }
   }
 });
 

@@ -322,8 +322,18 @@ const verifyPayment = async (req, res) => {
             booking.razorpayPaymentId = razorpay_payment_id;
             booking.razorpaySignature = razorpay_signature;
             booking.paymentStatus = 'paid';
-            // Optionally update booking status to confirmed/paid
-            // booking.status = 'approved'; 
+
+            // COMMISSION LOGIC (4%)
+            const COMMISSION_RATE = 0.04;
+            const total = booking.totalCost;
+
+            // Calculate commission
+            const adminCommission = total * COMMISSION_RATE;
+            const vendorEarnings = total - adminCommission;
+
+            booking.adminCommission = adminCommission;
+            booking.vendorEarnings = vendorEarnings;
+
             await booking.save();
 
             res.status(StatusCodes.OK).json({ success: true, message: "Payment verified successfully" });
