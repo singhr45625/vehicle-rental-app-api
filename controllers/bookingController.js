@@ -215,7 +215,7 @@ const createRazorpayOrder = async (req, res) => {
             return res.status(StatusCodes.NOT_FOUND).json({ error: 'Booking not found' });
         }
 
-        if (booking.customer.toString() !== req.user.userId) {
+        if (booking.customer.toString() !== req.user.userId.toString()) {
             return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Not authorized' });
         }
 
