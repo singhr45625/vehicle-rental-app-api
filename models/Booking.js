@@ -40,6 +40,20 @@ const BookingSchema = new mongoose.Schema({
         latitude: Number,
         longitude: Number,
         lastUpdated: Date
+    },
+    razorpayOrderId: {
+        type: String
+    },
+    razorpayPaymentId: {
+        type: String
+    },
+    razorpaySignature: {
+        type: String
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'paid', 'failed'],
+        default: 'pending'
     }
 }, { timestamps: true });
 

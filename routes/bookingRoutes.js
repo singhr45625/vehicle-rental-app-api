@@ -5,22 +5,23 @@ const {
     getAllBookings,
     updateBookingStatus,
     getSingleBooking,
-    updateLocation
+    updateLocation,
+    createRazorpayOrder,
+    verifyPayment
 } = require('../controllers/bookingController');
 const { authenticateUser, authorizePermissions, checkVerification } = require('../middleware/auth');
 
 router.use(authenticateUser);
 
-router
-    .route('/')
-    .post(authorizePermissions('customer'), checkVerification, createBooking)
-    .get(getAllBookings);
+router.post('/', authorizePermissions('customer'), checkVerification, createBooking);
+router.get('/', getAllBookings);
 
-router
-    .route('/:id')
-    .get(getSingleBooking)
-    .patch(updateBookingStatus);
+router.get('/:id', getSingleBooking);
+router.patch('/:id', updateBookingStatus);
 
-router.route('/:id/location').patch(updateLocation);
+router.post('/:id/create-razorpay-order', createRazorpayOrder);
+router.post('/verify-payment', verifyPayment);
+
+router.patch('/:id/location', updateLocation);
 
 module.exports = router;

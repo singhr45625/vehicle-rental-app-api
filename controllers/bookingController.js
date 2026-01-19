@@ -1,6 +1,14 @@
 const Booking = require('../models/Booking');
 const Vehicle = require('../models/Vehicle');
 const { StatusCodes } = require('http-status-codes');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret',
+});
+
 
 const createBooking = async (req, res) => {
     try {
@@ -198,10 +206,90 @@ const updateLocation = async (req, res) => {
     }
 };
 
+const createRazorpayOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const booking = await Booking.findById(id);
+
+        if (!booking) {
+            return res.status(StatusCodes.NOT_FOUND).json({ error: 'Booking not found' });
+        }
+
+        if (booking.customer.toString() !== req.user.userId) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Not authorized' });
+        }
+
+        const options = {
+            amount: booking.totalCost * 100, // amount in the smallest currency unit (paise)
+            currency: "INR",
+            receipt: `receipt_order_${booking._id}`,
+        };
+
+        const order = await razorpay.orders.create(options);
+
+        booking.razorpayOrderId = order.id;
+        await booking.save();
+
+        res.status(StatusCodes.OK).json({
+            orderId: order.id,
+            amount: order.amount,
+            currency: order.currency,
+            key_id: process.env.RAZORPAY_KEY_ID
+        });
+    } catch (error) {
+        console.error("Razorpay Order Creation Error:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message });
+    }
+};
+
+const verifyPayment = async (req, res) => {
+    try {
+        const {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+            bookingId
+        } = req.body;
+
+        const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+        const expectedSignature = crypto
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret')
+            .update(body.toString())
+            .digest("hex");
+
+        const isAuthentic = expectedSignature === razorpay_signature;
+
+        if (isAuthentic) {
+            const booking = await Booking.findById(bookingId);
+            if (!booking) {
+                return res.status(StatusCodes.NOT_FOUND).json({ error: 'Booking not found' });
+            }
+
+            booking.razorpayPaymentId = razorpay_payment_id;
+            booking.razorpaySignature = razorpay_signature;
+            booking.paymentStatus = 'paid';
+            // Optionally update booking status to confirmed/paid
+            // booking.status = 'approved'; 
+            await booking.save();
+
+            res.status(StatusCodes.OK).json({ success: true, message: "Payment verified successfully" });
+        } else {
+            res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Payment verification failed" });
+        }
+    } catch (error) {
+        console.error("Payment Verification Error:", error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message });
+    }
+};
+
+
 module.exports = {
     createBooking,
     getAllBookings,
     updateBookingStatus,
     getSingleBooking,
-    updateLocation
+    updateLocation,
+    createRazorpayOrder,
+    verifyPayment
 };
