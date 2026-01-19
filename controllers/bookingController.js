@@ -15,12 +15,16 @@ const createBooking = async (req, res) => {
         const { vehicleId, startDate, endDate } = req.body;
         const customer = req.user.userId;
 
+        console.log(`[BOOKING] Creating booking for vehicle ${vehicleId} by user ${customer}`);
+
         const vehicle = await Vehicle.findById(vehicleId);
         if (!vehicle) {
+            console.error(`[BOOKING] Vehicle not found: ${vehicleId}`);
             return res.status(StatusCodes.NOT_FOUND).json({ error: 'Vehicle not found' });
         }
 
         if (!vehicle.available) {
+            console.error(`[BOOKING] Vehicle not available: ${vehicleId}`);
             return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Vehicle is not available' });
         }
 
@@ -30,34 +34,39 @@ const createBooking = async (req, res) => {
         const diffTime = Math.abs(end - start);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        if (diffDays <= 0) {
-            return res.status(StatusCodes.BAD_REQUEST).json({ error: 'End date must be after start date' });
+        console.log(`[BOOKING] Dates: ${startDate} to ${endDate}, Days: ${diffDays}`);
+
+        if (isNaN(diffDays) || diffDays <= 0) {
+            return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid dates. End date must be after start date.' });
         }
 
         // NEGOTIATION LOGIC
-        // Check for active negotiation
         let rentPerDay = vehicle.rentPerDay;
+        try {
+            const Chat = require('../models/Chat');
+            const chat = await Chat.findOne({
+                customer: customer,
+                vendor: vehicle.vendor,
+                vehicle: vehicleId,
+                'negotiation.status': 'active'
+            });
 
-        // Find chat between this customer, vehicle and vendor
-        const Chat = require('../models/Chat'); // Lazy load or move to top
-        const chat = await Chat.findOne({
-            customer: customer,
-            vendor: vehicle.vendor,
-            vehicle: vehicleId,
-            'negotiation.status': 'active'
-        });
-
-        if (chat && chat.negotiation && chat.negotiation.price) {
-            rentPerDay = chat.negotiation.price;
-            console.log(`Using negotiated price: ${rentPerDay}`);
-
-            // Mark negotiation as completed
-            chat.negotiation.status = 'completed';
-            chat.negotiation.price = null; // Optional: clear it or keep history
-            await chat.save();
+            if (chat && chat.negotiation && chat.negotiation.price) {
+                rentPerDay = chat.negotiation.price;
+                console.log(`[BOOKING] Using negotiated price: ${rentPerDay}`);
+                chat.negotiation.status = 'completed';
+                await chat.save();
+            }
+        } catch (chatError) {
+            console.log("[BOOKING] Negotiation check skipped or failed:", chatError.message);
         }
 
         const totalCost = diffDays * rentPerDay;
+        console.log(`[BOOKING] Calculated total cost: ${totalCost}`);
+
+        if (isNaN(totalCost)) {
+            return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Could not calculate total cost.' });
+        }
 
         const booking = await Booking.create({
             customer,
@@ -68,11 +77,14 @@ const createBooking = async (req, res) => {
             totalCost
         });
 
+        console.log(`[BOOKING] Successfully created booking: ${booking._id}`);
         res.status(StatusCodes.CREATED).json({ booking });
     } catch (error) {
+        console.error("[BOOKING] Unexpected Error:", error);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message });
     }
 };
+
 
 const getAllBookings = async (req, res) => {
     try {
