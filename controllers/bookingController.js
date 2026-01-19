@@ -226,9 +226,18 @@ const updateLocation = async (req, res) => {
 const createRazorpayOrder = async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Validate ID format to prevent Mongoose cast errors
+        const mongoose = require('mongoose');
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            console.error(`[RAZORPAY] Invalid booking ID format: ${id}`);
+            return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid booking ID format' });
+        }
+
         const booking = await Booking.findById(id);
 
         if (!booking) {
+            console.error(`[RAZORPAY] Booking not found for order creation: ${id}`);
             return res.status(StatusCodes.NOT_FOUND).json({ error: 'Booking not found' });
         }
 
