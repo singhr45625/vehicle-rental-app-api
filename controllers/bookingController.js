@@ -227,6 +227,15 @@ const createRazorpayOrder = async (req, res) => {
     try {
         const { id } = req.params;
 
+        // CHECK RAZORPAY KEYS
+        if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_placeholder' ||
+            !process.env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET === 'placeholder_secret') {
+            console.error("[RAZORPAY] API Keys are missing or invalid in Environment Variables.");
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                error: 'Server Misconfiguration: Razorpay Keys not found. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to Render Environment Variables.'
+            });
+        }
+
         // Validate ID format to prevent Mongoose cast errors
         const mongoose = require('mongoose');
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -244,6 +253,11 @@ const createRazorpayOrder = async (req, res) => {
         if (booking.customer.toString() !== req.user.userId.toString()) {
             console.error(`[RAZORPAY] Unauthorized order creation for booking ${id} by user ${req.user.userId}`);
             return res.status(StatusCodes.UNAUTHORIZED).json({ error: 'Not authorized' });
+        }
+
+        if (!booking.totalCost || isNaN(booking.totalCost)) {
+            console.error(`[RAZORPAY] Invalid totalCost for booking ${id}: ${booking.totalCost}`);
+            return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid booking cost. Cannot generate payment order.' });
         }
 
         const amount = Math.round(booking.totalCost * 100);
@@ -267,13 +281,16 @@ const createRazorpayOrder = async (req, res) => {
             orderId: order.id,
             amount: order.amount,
             currency: order.currency,
-            key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder'
+            key_id: process.env.RAZORPAY_KEY_ID
         });
     } catch (error) {
         console.error("Razorpay Order Creation Error Full:", error);
+        // Log deep error properties if they exist (Razorpay specific)
+        if (error.error) console.error("Razorpay Upstream Error:", JSON.stringify(error.error));
+
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            error: error.message || 'Razorpay order creation failed',
-            details: error.description || error.metadata || null
+            error: 'Razorpay order creation failed',
+            details: error.error ? error.error.description : (error.message || 'Unknown upstream error')
         });
     }
 };
