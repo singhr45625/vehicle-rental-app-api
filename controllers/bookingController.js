@@ -12,10 +12,11 @@ const razorpay = new Razorpay({
 
 const createBooking = async (req, res) => {
     try {
-        const { vehicleId, startDate, endDate } = req.body;
+        const { vehicleId, startDate, endDate, numberOfPeople, destination } = req.body;
         const customer = req.user.userId;
 
         console.log(`[BOOKING] Creating booking for vehicle ${vehicleId} by user ${customer}`);
+        console.log(`[BOOKING] Request Body:`, JSON.stringify(req.body, null, 2));
 
         const vehicle = await Vehicle.findById(vehicleId);
         if (!vehicle) {
@@ -74,7 +75,9 @@ const createBooking = async (req, res) => {
             vendor: vehicle.vendor,
             startDate,
             endDate,
-            totalCost
+            totalCost,
+            numberOfPeople: numberOfPeople || 1,
+            destination
         });
 
         console.log(`[BOOKING] Successfully created booking: ${booking._id}`);
@@ -246,11 +249,11 @@ const createRazorpayOrder = async (req, res) => {
             orderId: order.id,
             amount: order.amount,
             currency: order.currency,
-            key_id: process.env.RAZORPAY_KEY_ID
+            key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder'
         });
     } catch (error) {
         console.error("Razorpay Order Creation Error:", error);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message || 'Razorpay order creation failed' });
     }
 };
 

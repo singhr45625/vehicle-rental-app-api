@@ -30,6 +30,8 @@ const protect = async (req, res, next) => {
     req.user = user; // Now req.user is the Mongoose document
     req.user.userId = user._id; // Keep compatibility
 
+    console.log(`[AUTH] User Authenticated: ${user.email}, Role: ${user.role}, Status: ${user.verificationStatus}`);
+
     next();
   } catch (error) {
     console.error('JWT Verification Error:', error.message);
@@ -51,6 +53,7 @@ const protect = async (req, res, next) => {
 const authorizePermissions = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
+      console.error(`[AUTH] Role Mismatch: Expected [${roles}], Got [${req.user.role}]`);
       return res.status(403).json({
         error: 'Unauthorized to access this route'
       });
@@ -120,8 +123,9 @@ const checkVerification = (req, res, next) => {
     return next();
   }
 
+  console.error(`[AUTH] Verification Failed: User ${req.user.email} is ${req.user.verificationStatus}`);
   return res.status(403).json({
-    error: 'Account not verified. Please wait for admin approval.'
+    error: `Account not verified. Current status: ${req.user.verificationStatus}. Please wait for admin approval.`
   });
 };
 

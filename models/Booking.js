@@ -41,6 +41,13 @@ const BookingSchema = new mongoose.Schema({
         longitude: Number,
         lastUpdated: Date
     },
+    numberOfPeople: {
+        type: Number,
+        default: 1
+    },
+    destination: {
+        type: String
+    },
     razorpayOrderId: {
         type: String
     },

@@ -13,7 +13,7 @@ const { authenticateUser, authorizePermissions, checkVerification } = require('.
 
 router.use(authenticateUser);
 
-router.post('/', authorizePermissions('customer'), checkVerification, createBooking);
+router.post('/', authorizePermissions('customer', 'user'), checkVerification, createBooking);
 router.get('/', getAllBookings);
 
 router.get('/:id', getSingleBooking);
